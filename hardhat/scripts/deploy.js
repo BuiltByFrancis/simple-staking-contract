@@ -1,31 +1,43 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
-// will compile your contracts, add the Hardhat Runtime Environment's members to the
-// global scope, and execute the script.
-const hre = require("hardhat");
+const { ethers } = require("hardhat");
+require("dotenv").config({ path: ".env" });
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-  const unlockTime = currentTimestampInSeconds + ONE_YEAR_IN_SECS;
-
-  const lockedAmount = hre.ethers.utils.parseEther("1");
-
-  const Lock = await hre.ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
-
-  await lock.deployed();
-
-  console.log(
-    `Lock with 1 ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`
-  );
+  //await deployRewardToken();
+  //await Verify("0x6080B856B22F52ffC4702B3251d43d93C7748875")
+  
+  //await deployNFT();
+  //await Verify("0x98228513B13FFb38bfDA58CA16FCB6A1E6B26c3B", ["ipfs://Qmf2nYieX65DP8hNnbvLTp6f3GPyjbqrnFXfw9c7hT9RaY/"])
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+async function deployRewardToken() {
+  const tokenContract = await ethers.getContractFactory("RewardToken");
+  const deployedTokenContract = await tokenContract.deploy();
+  await deployedTokenContract.deployed();
+  console.log("RewardToken Contract Address:", deployedTokenContract.address);
+  // Last: 0x6080B856B22F52ffC4702B3251d43d93C7748875
+}
+async function deployNFT() {
+  const metadataURL = "ipfs://Qmf2nYieX65DP8hNnbvLTp6f3GPyjbqrnFXfw9c7hT9RaY/";
+  const nftContract = await ethers.getContractFactory("NFT");
+  const deployedNFTContract = await nftContract.deploy(metadataURL);
+  await deployedNFTContract.deployed();
+  console.log("NFT Contract Address:", deployedNFTContract.address);
+  // Last: 0x98228513B13FFb38bfDA58CA16FCB6A1E6B26c3B
+}
+
+async function Verify(address, constructorArguments) {
+  await hre.run("verify:verify", {
+    address: address,
+    constructorArguments: constructorArguments,
+  });
+}
+
+// npx hardhat compile
+// npx hardhat run scripts/deploy.js --network goerli
+
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
