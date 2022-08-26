@@ -46,6 +46,21 @@ export default function Home() {
     return web3Provider;
   };
 
+  const updateNftData = async () => {
+    try {
+      const provider = await getProviderOrSigner(true);
+      const nftContract = new Contract(nftContractAddress, nftABI, provider);
+
+      const user = await nftContract.balanceOf(await provider.getAddress());
+      const contract = await nftContract._tokenId();
+
+      setNFTBalance(utils.formatUnits(user, 0));
+      setMintedNFTS(utils.formatUnits(contract, 0));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const updateRewardTokenBalances = async () => {
     try {
       const provider = await getProviderOrSigner(true);
@@ -55,7 +70,9 @@ export default function Home() {
         provider
       );
 
-      const user = await rewardTokenContract.balanceOf(await provider.getAddress());
+      const user = await rewardTokenContract.balanceOf(
+        await provider.getAddress()
+      );
       const contract = await rewardTokenContract.balanceOf(
         rewardTokenContractAddress
       );
@@ -64,6 +81,47 @@ export default function Home() {
       setContractTokenBalance(utils.formatUnits(contract, 18));
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const sendTokensToContract = async () => {
+    const provider = await getProviderOrSigner(true);
+    const rewardTokenContract = new Contract(
+      rewardTokenContractAddress,
+      rewardTokenABI,
+      provider
+    );
+
+    setLoading(true);
+    try {
+      const tx = await rewardTokenContract.transfer(
+        rewardTokenContractAddress,
+        utils.parseEther("100")
+      );
+      await tx.wait();
+    } catch (err) {
+      console.error(err);
+    }
+    setLoading(false);
+  };
+
+  const mint = async () => {
+    const provider = await getProviderOrSigner(true);
+    const nftContract = new Contract(nftContractAddress, nftABI, provider);
+
+    if (totalMintedNfts < 10) {
+      setLoading(true);
+      try {
+        const tx = await nftContract.mint({
+          value: utils.parseEther("0.01"),
+        });
+        await tx.wait();
+      } catch (err) {
+        console.error(err);
+      }
+      setLoading(false);
+    } else {
+      window.alert("All gone lol");
     }
   };
 
@@ -77,12 +135,22 @@ export default function Home() {
 
       connectWallet();
       updateRewardTokenBalances();
+      updateNftData();
 
       setInterval(async function () {
         await updateRewardTokenBalances();
+        await updateNftData();
       }, 5000); // 5 seconds
     }
   }, [walletConnected]);
+
+  const Button = ({ title, onClick }) => {
+    return (
+      <button disabled={loading ? "disabled" : ""} onClick={onClick}>
+        {loading ? "Loading..." : title}
+      </button>
+    );
+  };
 
   return (
     <div className={styles.container}>
@@ -105,7 +173,9 @@ export default function Home() {
         <label>Total Minted NFTS: {totalMintedNfts}</label>
       </div>
       <div>
-        <button className={styles.button} onClick={connectWallet}>Connect</button>
+        <Button title={"Mint"} onClick={mint} />
+        <Button title={"Send 100 to contract"} onClick={sendTokensToContract} />
+        <Button title={"Connect"} onClick={connectWallet} />
       </div>
     </div>
   );
