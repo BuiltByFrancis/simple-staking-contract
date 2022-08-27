@@ -10,6 +10,7 @@ import {
 } from "../constants";
 import Web3Modal from "web3modal";
 import styles from "../styles/Home.module.css";
+import NavBar from "../components";
 
 export default function Home() {
   const [walletConnected, setWalletConnected] = useState(false);
@@ -153,7 +154,8 @@ export default function Home() {
   };
 
   return (
-    <div className={styles.container}>
+    <div>
+      <NavBar />
       <div>
         <label>WalletConnected: {walletConnected ? "true" : "false"}</label>
       </div>
