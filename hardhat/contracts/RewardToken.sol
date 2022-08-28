@@ -2,22 +2,15 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "./base/OwnerWithdrawable.sol";
 
 error withdrawFailed();
 
-contract RewardToken is ERC20, Ownable {
+contract RewardToken is ERC20, OwnerWithdrawable {
     uint256 public constant maxTotalSupply = 10000 * 10**18;
 
     constructor() ERC20("RewardToken", "RT") {
         _mint(msg.sender, maxTotalSupply);
-    }
-
-    function withdraw() public onlyOwner {
-        address _owner = owner();
-        uint256 balance = address(this).balance;
-        (bool success, ) = _owner.call{value: balance}("");
-        if (!success) revert withdrawFailed();
     }
 
     receive() external payable {}
